@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "개드립 메모장",
+  "version": "1.0",
+  "description": "개드립 전용 유저 메모장",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.dogdrip.net/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.dogdrip.net/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    },
+    "default_title": "개드립 메모장", 
+    "default_popup": "popup.html"
+  }
+}
