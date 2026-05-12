@@ -155,18 +155,30 @@ function renderNoteActions(popupMenu, memberSrl, memberName) {
   });
 }
 
-// 팝업이 열리기 직전 클릭된 유저 링크의 닉네임을 캡처
+// 팝업 열리기 직전 클릭된 링크 텍스트를 폭넓게 캡처 (href 형태 무관)
 let pendingNick = "";
 
 document.addEventListener("mousedown", (e) => {
-  const link = e.target.closest('a[href*="member_srl"]');
-  if (!link) return;
+  const link = e.target.closest("a");
+  if (!link || link.closest("#popup_menu_area")) return;
   const text = link.textContent.trim();
-  // 메뉴 항목("회원정보 보기" 등)은 제외하고 짧은 닉네임만 저장
-  if (text && text.length <= 30 && !text.includes("보기") && !text.includes("보내기")) {
+  if (text && text.length >= 1 && text.length <= 30 && !text.includes("\n")) {
     pendingNick = text;
   }
 }, true);
+
+// 페이지 DOM에서 memberSrl이 포함된 링크를 찾아 닉네임 추출
+function findNickFromPage(memberSrl) {
+  const links = document.querySelectorAll(`a[href*="${memberSrl}"]`);
+  for (const link of links) {
+    if (link.closest("#popup_menu_area")) continue;
+    const text = link.textContent.trim();
+    if (text && text.length >= 1 && text.length <= 30 && !text.includes("\n")) {
+      return text;
+    }
+  }
+  return "";
+}
 
 const observer = new MutationObserver(() => {
   const popupMenu = document.querySelector("#popup_menu_area");
@@ -179,7 +191,8 @@ const observer = new MutationObserver(() => {
   const memberSrl = new URLSearchParams(memberInfoLink.href.split("?")[1]).get("member_srl");
   if (!memberSrl) return;
 
-  const memberName = pendingNick || "";
+  // 페이지 DOM 탐색 → mousedown 캡처 순으로 닉네임 결정
+  const memberName = findNickFromPage(memberSrl) || pendingNick || "";
 
   renderNoteActions(popupMenu, memberSrl, memberName);
 });
