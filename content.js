@@ -118,7 +118,7 @@ function renderNoteActions(popupMenu, memberSrl, memberName) {
         e.preventDefault();
         e.stopPropagation();
         openModal({ mode: "edit", initialValue: note.text, onConfirm: (newText) => {
-          const updated = { ...note, text: newText, name: memberName, updatedAt: new Date().toISOString() };
+          const updated = { ...note, text: newText, name: memberName, srl: memberSrl, updatedAt: new Date().toISOString() };
           chrome.storage.sync.set({ [`note_${memberSrl}`]: updated }, () => {
             if (chrome.runtime.lastError) return;
             renderNoteActions(popupMenu, memberSrl, memberName);
@@ -144,7 +144,7 @@ function renderNoteActions(popupMenu, memberSrl, memberName) {
         e.stopPropagation();
         openModal({ mode: "add", onConfirm: (text) => {
           const now = new Date().toISOString();
-          const newNote = { text, name: memberName, createdAt: now, updatedAt: now };
+          const newNote = { text, name: memberName, srl: memberSrl, createdAt: now, updatedAt: now };
           chrome.storage.sync.set({ [`note_${memberSrl}`]: newNote }, () => {
             if (chrome.runtime.lastError) return;
             renderNoteActions(popupMenu, memberSrl, memberName);
@@ -154,6 +154,19 @@ function renderNoteActions(popupMenu, memberSrl, memberName) {
     }
   });
 }
+
+// 팝업이 열리기 직전 클릭된 유저 링크의 닉네임을 캡처
+let pendingNick = "";
+
+document.addEventListener("mousedown", (e) => {
+  const link = e.target.closest('a[href*="member_srl"]');
+  if (!link) return;
+  const text = link.textContent.trim();
+  // 메뉴 항목("회원정보 보기" 등)은 제외하고 짧은 닉네임만 저장
+  if (text && text.length <= 30 && !text.includes("보기") && !text.includes("보내기")) {
+    pendingNick = text;
+  }
+}, true);
 
 const observer = new MutationObserver(() => {
   const popupMenu = document.querySelector("#popup_menu_area");
@@ -166,8 +179,7 @@ const observer = new MutationObserver(() => {
   const memberSrl = new URLSearchParams(memberInfoLink.href.split("?")[1]).get("member_srl");
   if (!memberSrl) return;
 
-  const nameEl = popupMenu.querySelector(".member_info_name, .nick, .disp_member_name");
-  const memberName = nameEl ? nameEl.textContent.trim() : memberInfoLink.textContent.trim();
+  const memberName = pendingNick || "";
 
   renderNoteActions(popupMenu, memberSrl, memberName);
 });

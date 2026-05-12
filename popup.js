@@ -12,8 +12,10 @@ function renderList(notes, query) {
   const filtered = notes.filter(({ key, note }) => {
     if (!query) return true;
     const q = query.toLowerCase();
+    const srl = key.replace("note_", "");
     return (note.name || "").toLowerCase().includes(q) ||
-           (note.text || "").toLowerCase().includes(q);
+           (note.text || "").toLowerCase().includes(q) ||
+           srl.includes(q);
   });
 
   countEl.textContent = `총 ${notes.length}개`;
@@ -30,15 +32,19 @@ function renderList(notes, query) {
 
   list.innerHTML = "";
   filtered.forEach(({ key, note }) => {
+    const srl = key.replace("note_", "");
     const li = document.createElement("li");
     li.className = "memo-item";
     li.innerHTML = `
       <div class="memo-item-header">
-        <span class="memo-nick">${note.name || "(이름 없음)"}</span>
+        <span class="memo-nick">
+          ${note.name || "(닉네임 미확인)"}
+          <span class="memo-srl">#${srl}</span>
+        </span>
         <button class="memo-delete-btn" data-key="${key}" title="삭제">×</button>
       </div>
       <div class="memo-text">${note.text}</div>
-      ${note.updatedAt ? `<div class="memo-time">${formatDate(note.updatedAt)} 수정</div>` : ""}
+      ${note.updatedAt ? `<div class="memo-time">${formatDate(note.updatedAt)} 수정</div>` : note.createdAt ? `<div class="memo-time">${formatDate(note.createdAt)} 작성</div>` : ""}
     `;
     list.appendChild(li);
   });
