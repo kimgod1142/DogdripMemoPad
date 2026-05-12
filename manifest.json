@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "개드립 메모장",
-  "version": "1.0",
+  "version": "1.1",
   "description": "개드립 전용 유저 메모장",
   "permissions": ["storage"],
   "host_permissions": ["https://www.dogdrip.net/*"],
   "content_scripts": [
     {
       "matches": ["https://www.dogdrip.net/*"],
+      "css": ["content.css"],
       "js": ["content.js"]
     }
   ],
