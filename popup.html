@@ -4,100 +4,265 @@
   <meta charset="UTF-8">
   <title>개드립 메모장</title>
   <style>
+    :root {
+      --bg:        #f2f2f7;
+      --surface:   #ffffff;
+      --text-1:    #1c1c1e;
+      --text-2:    #6c6c70;
+      --text-3:    #aeaeb2;
+      --danger:    #ff3b30;
+      --border:    rgba(0, 0, 0, 0.08);
+      --shadow:    0 1px 4px rgba(0, 0, 0, 0.08);
+      --check-bg:  #3a3a3c;
+      --interactive: #3a3a3c;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:       #1c1c1e;
+        --surface:  #2c2c2e;
+        --text-1:   #ffffff;
+        --text-2:   rgba(235, 235, 245, 0.6);
+        --text-3:   rgba(235, 235, 245, 0.3);
+        --danger:   #ff453a;
+        --check-bg:  #ebebf5;
+        --interactive: #ebebf5;
+        --border:   rgba(255, 255, 255, 0.08);
+        --shadow:   0 1px 4px rgba(0, 0, 0, 0.4);
+      }
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', Arial, sans-serif;
-      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      background: var(--bg);
+      color: var(--text-1);
       width: 360px;
       min-height: 480px;
-      padding: 16px;
+      padding: 14px;
     }
 
-    .popup-header {
+    /* 헤더 */
+    .header {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
-      gap: 8px;
+      gap: 6px;
+      margin-bottom: 10px;
+      min-height: 32px;
     }
 
-    .popup-header h1 {
-      font-size: 18px;
-      color: #ff5a35;
+    .header h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-1);
       flex: 1;
     }
 
     .memo-count {
       font-size: 12px;
-      color: #888;
+      color: var(--text-3);
       white-space: nowrap;
     }
 
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-2);
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .icon-btn:hover { background: var(--border); }
+    .icon-btn.danger { color: var(--danger); }
+
+    /* 선택 모드 헤더 */
+    .select-header {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      min-height: 32px;
+    }
+
+    .select-header.active { display: flex; }
+    .header.hidden { display: none; }
+
+    .select-all-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-1);
+      flex: 1;
+      padding: 0;
+    }
+
+    .select-all-btn .check-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--text-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .select-all-btn.all-selected .check-circle {
+      background: var(--check-bg);
+      border-color: var(--check-bg);
+    }
+
+    .select-all-btn .check-circle::after {
+      content: '';
+      width: 9px;
+      height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translateY(-1px);
+      display: none;
+    }
+
+    .select-all-btn.all-selected .check-circle::after { display: block; }
+
+    .del-selected-btn {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .cancel-select-btn {
+      background: none;
+      border: none;
+      color: var(--interactive);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 4px;
+    }
+
+    /* 검색 */
     .search-box {
       width: 100%;
       padding: 8px 12px;
-      border: 1px solid #ddd;
+      border: 1.5px solid var(--border);
       border-radius: 20px;
       font-size: 13px;
       outline: none;
-      margin-bottom: 12px;
-      background: #fff;
+      margin-bottom: 10px;
+      background: var(--surface);
+      color: var(--text-1);
+      transition: border-color 0.15s;
     }
+    .search-box::placeholder { color: var(--text-3); }
+    .search-box:focus { border-color: var(--interactive); }
 
-    .search-box:focus { border-color: #ff7e5f; }
-
+    /* 목록 */
     .memo-list {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-height: 360px;
+      gap: 6px;
+      max-height: 370px;
       overflow-y: auto;
-      padding-right: 2px;
     }
 
     .memo-item {
-      background: #fff;
-      border-radius: 8px;
+      background: var(--surface);
+      border-radius: 10px;
       padding: 10px 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: default;
     }
+
+    /* 체크박스 (선택 모드에서만 표시) */
+    .item-check {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--text-3);
+      flex-shrink: 0;
+      margin-top: 1px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    body.select-mode .item-check { display: flex; }
+
+    .item-check::after {
+      content: '';
+      width: 9px;
+      height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translateY(-1px);
+      display: none;
+    }
+
+    .item-check.checked {
+      background: var(--check-bg);
+      border-color: var(--check-bg);
+    }
+    .item-check.checked::after { display: block; }
+
+    .item-body { flex: 1; min-width: 0; }
 
     .memo-item-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .memo-nick {
       font-size: 13px;
-      font-weight: bold;
-      color: #333;
+      font-weight: 600;
+      color: var(--text-1);
     }
 
     .memo-srl {
       font-size: 11px;
-      color: #aaa;
+      color: var(--text-3);
       font-weight: normal;
-      margin-left: 5px;
+      margin-left: 4px;
     }
 
     .memo-delete-btn {
       background: none;
       border: none;
-      color: #ccc;
+      color: var(--text-3);
       font-size: 16px;
       cursor: pointer;
       line-height: 1;
       padding: 0 2px;
+      flex-shrink: 0;
     }
+    .memo-delete-btn:hover { color: var(--danger); }
 
-    .memo-delete-btn:hover { color: #d83b3b; }
+    /* 선택 모드에서 × 버튼 숨김 */
+    body.select-mode .memo-delete-btn { display: none; }
 
     .memo-text {
       font-size: 12px;
-      color: #555;
+      color: var(--text-2);
       line-height: 1.5;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -108,25 +273,38 @@
 
     .memo-time {
       font-size: 10px;
-      color: #aaa;
-      margin-top: 5px;
+      color: var(--text-3);
+      margin-top: 4px;
     }
 
+    /* 빈 상태 */
     .empty-state {
       text-align: center;
       padding: 48px 0;
-      color: #aaa;
+      color: var(--text-3);
       font-size: 13px;
       line-height: 2;
     }
-
     .empty-state .emoji { font-size: 32px; display: block; margin-bottom: 8px; }
   </style>
 </head>
 <body>
-  <div class="popup-header">
+  <!-- 일반 헤더 -->
+  <div class="header" id="normal-header">
     <h1>개드립 메모장</h1>
     <span class="memo-count" id="memo-count"></span>
+    <button class="icon-btn" id="select-mode-btn">선택</button>
+    <button class="icon-btn danger" id="delete-all-btn">전체 삭제</button>
+  </div>
+
+  <!-- 선택 모드 헤더 -->
+  <div class="select-header" id="select-header">
+    <button class="select-all-btn" id="select-all-btn">
+      <span class="check-circle"></span>
+      <span id="select-all-label">전체 선택</span>
+    </button>
+    <button class="del-selected-btn" id="del-selected-btn">삭제</button>
+    <button class="cancel-select-btn" id="cancel-select-btn">취소</button>
   </div>
 
   <input type="text" class="search-box" id="search-input" placeholder="유저명 또는 메모 내용 검색...">
